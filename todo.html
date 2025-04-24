@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderlust - To-do List</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <div class="logo">Wanderlust</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="#">Planner</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="trip.html">Trip Overview</a></li>
+                        <li><a href="expense.html">Expense Tracker</a></li>
+                        <li><a href="todo.html">To-do List</a></li>
+                    </ul>
+                </li>
+                <li><a href="map.html">Map</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="todo">
+        <h2>To-do List</h2>
+
+        <form id="todo-form" method="post">
+            <input type="text" name="task" id="task" placeholder="Task Name" required>
+            <input type="text" name="description" id="description" placeholder="Description" required>
+            <input type="date" name="deadline" id="deadline" required>
+            <input type="hidden" name="trip_id" value="1">
+            <input type="hidden" name="user_id" value="1">
+            <button type="submit">Add</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Deadline</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="todo-table">
+                <!-- Task rows will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const todoForm = document.getElementById('todo-form');
+        const todoTable = document.getElementById('todo-table');
+    
+        // Load tasks on page load
+        window.onload = function () {
+            fetch('todo.php')
+                .then(res => res.json())
+                .then(tasks => {
+                    tasks.forEach(task => addTaskToTable(task));
+                });
+        };
+    
+        // Add task via fetch
+        todoForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(todoForm);
+    
+            fetch('todo.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    addTaskToTable(data); // using returned data directly
+                    todoForm.reset();
+                }
+            });
+        });
+    
+        // Add a row to the table
+        function addTaskToTable(task) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${task.task}</td>
+                <td>${task.description}</td>
+                <td>${task.deadline}</td>
+                <td><button class="delete-btn" data-id="${task.id}">Delete</button></td>
+            `;
+            todoTable.appendChild(row);
+    
+            // Delete button
+            row.querySelector('.delete-btn').addEventListener('click', () => {
+                fetch(`todo.php?delete=${task.id}`)
+                    .then(() => row.remove());
+            });
+        }
+    </script>
+    
+
+</body>
+</html>
